@@ -1,57 +1,144 @@
 const { MongoClient, ServerApiVersion } = require('mongodb');
+require('dotenv').config();
+const utils = require('./utlis');
 
 // importing the dependencies
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-// const helmet = require('helmet');
-// const morgan = require('morgan');
+const jwt = require('jsonwebtoken');
 
 // defining the Express app
 const app = express();
-
+const port = process.env.PORT || 8000;
 
 // using bodyParser to parse JSON bodies into JS objects
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // enabling CORS for all requests
 app.use(cors());
 
-// const collection = client.db("Mood_App").collection("Users");
-
-// let inputData = {"name":"Chris Kyle", "email":"123@urmom.com","password":"123456" }
 
 const uri = "mongodb+srv://Admin:12345@cluster0.sne1o.mongodb.net/?retryWrites=true&w=majority";
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
-let inputData = {"name":"Chris Kyle", "email":"123@urmom.com","password":"123456" }
+let inputData = {}
 // defining an endpoint to return all ads
-app.get('/', (req, res) => {
+// app.get('/', (req, res) => {
+
 // collection.insertOne(inputData);
 
 //function to add new data into new collections
-addToDatabase("moods",inputData)
-  res.send("Data Added");
-});
+// addToDatabase()
+//   res.send("Data Added");
+// });
 
 app.post('/SignUp', function requestHandler(req, res) {
   console.log(JSON.stringify(req.body));
-  addToDatabase("SignUpInfo",req.body)
+  addToDatabase("Users",req.body)
   res.send(req.body);
 });
+//validating user credendtials
+app.post('/Login', async function (req, res) {
+  const email = req.body.email;
+  const pwd = req.body.password;
 
-app.get('/LogIn', function requestHandler(req, res) {
-  console.log(JSON.stringify(req.body));
-  res.send(req.body);
+  // return 400 status if username/password is not exist
+if (!email || !pwd) {
+  return res.status(400).json({
+    error: true,
+    message: "Username or Password is required."
+  });
+}
+const existingUser = await getUser(email);
+
+// return 401 status if the credential is not match.
+if (!existingUser) {
+  return res.status(401).json({
+    error: true,
+    message: "No user found"
+  });
+}
+
+// return 401 status if the credential is not match.
+if (email !== existingUser.Email || pwd !== existingUser.Password) {
+  return res.status(401).json({
+    error: true,
+    message: "Email or Password is wrong."
+  });
+}
+
+// generate token
+const token = utils.generateToken(existingUser);
+// get basic user details
+const userObj = utils.getCleanUser(existingUser);
+// return the token along with user details
+return res.json({ existingUser: userObj, token });
+
 });
 
+// verify the token and return it if it's valid
+app.get('/verifyToken', function (req, res) {
+  // check header or url parameters or post parameters for token
+  var token = req.query.token;
+  if (!token) {
+    return res.status(400).json({
+      error: true,
+      message: "Token is required."
+    });
+  }
+  // check token that was passed by decoding token using secret
+  jwt.verify(token, process.env.JWT_SECRET, function (err, user) {
+    if (err) return res.status(401).json({
+      error: true,
+      message: "Invalid token."
+    });
+ 
+    // return 401 status if the userId does not match.
+    if (user.email !== inputData.email) {
+      return res.status(401).json({
+        error: true,
+        message: "Invalid user."
+      });
+    }
+    // get basic user details
+    var userObj = utils.getCleanUser(inputData);
+    return res.json({ user: userObj, token });
+  });
+});
+
+//middleware that checks if JWT token exists and verifies it if it does exist.
+//In all future routes, this helps to know if the request is authenticated or not.
+app.use(function (req, res, next) {
+  // check header or url parameters or post parameters for token
+  var token = req.headers['authorization'];
+  if (!token) return next(); //if no token, continue
+ 
+  token = token.replace('Bearer ', '');
+  jwt.verify(token, process.env.JWT_SECRET, function (err, user) {
+    if (err) {
+      return res.status(401).json({
+        error: true,
+        message: "Invalid user."
+      });
+    } else {
+      req.user = user; //set the user to req so other routes can use it
+      next();
+    }
+  });
+});
+ 
+// request handlers
+app.get('/', (req, res) => {
+  res.send('Welcome to the Node.js Tutorial! - ');
+});
 
 // starting the server
-app.listen(8000, () => {
+app.listen(port, () => {
   console.log('listening on port 8000');
 });
 
 function addToDatabase(moodCollection,inputData){
-    // let inputData = {"name":"Chris Kyle", "email":"123@urmom.com","password":"123456" }
     try{
       const collection = client.db("Mood_App").collection(moodCollection);
       collection.insertOne(inputData);
@@ -62,3 +149,16 @@ function addToDatabase(moodCollection,inputData){
       console.log(err);
     }
 }
+
+function getUser(email){
+  try{
+    const collection = client.db("Mood_App").collection("Users");
+    return collection.findOne({Email: email});
+  }
+  catch(err){
+    console.log("DB Find user FAILED...");
+    console.log(err);
+  }
+}
+
+
