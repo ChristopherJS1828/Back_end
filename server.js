@@ -38,6 +38,20 @@ app.post('/SignUp', function requestHandler(req, res) {
   addToDatabase("Users",req.body)
   res.send(req.body);
 });
+
+app.post('/FeelingsDesc', function requestHandler(req, res) {
+  console.log(JSON.stringify(req.body));
+  addToDatabase("DiaryEntry",req.body)
+  res.send(req.body);
+});
+
+//
+app.post('/UserQuestions', function requestHandler(req, res) {
+  console.log(JSON.stringify(req.body));
+  addToDatabase("MoodAns",req.body)
+  res.send(req.body);
+});
+
 //validating user credendtials
 app.post('/Login', async function (req, res) {
   const email = req.body.email;
