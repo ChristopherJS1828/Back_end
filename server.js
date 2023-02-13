@@ -45,6 +45,20 @@ app.post('/FeelingsDesc', function requestHandler(req, res) {
   res.send(req.body);
 });
 
+app.get('/MoodHistory', async function requestHandler(req, res) {
+  const userId = req.query.UserId;
+  // console.log(userId);
+  const diaries = await getDiaryEntries(userId);
+  res.send(diaries);
+});
+
+// app.get('/MoodHistory', async function requestHandler(req, res) {
+//   const userId = req.query.UserId;
+//   const moods = await getMoodEntries(userId);
+//   console.log(moods);
+//   res.send(moods);
+// });
+
 //
 app.post('/UserQuestions', function requestHandler(req, res) {
   console.log(JSON.stringify(req.body));
@@ -168,6 +182,36 @@ function getUser(email){
   try{
     const collection = client.db("Mood_App").collection("Users");
     return collection.findOne({Email: email});
+  }
+  catch(err){
+    console.log("DB Find user FAILED...");
+    console.log(err);
+  }
+}
+
+function getDiaryEntries(userid){
+  try{
+    console.log(`Getting diary entry for user with user id: ${userid}`);
+    const collection = client.db("Mood_App").collection("DiaryEntry");
+    return collection.find({UserId: userid}).toArray();
+    // console.log(`Get diaries returning ${diaryItems.length} items`);
+    // diaryItems.forEach((item) => {
+    //   console.log(`${item.DiaryEntry}`);
+    // });
+    // return diaryItems;
+  }
+  catch(err){
+    console.log("DB Find user FAILED...");
+    console.log(err);
+  }
+ 
+}
+
+function getMoodEntries(userid){
+  try{
+    console.log(`Getting mood entry for user with user id: ${userid}`);
+    const collection = client.db("Mood_App").collection("MoodAns");
+    return collection.find({UserId: userid}).toArray();
   }
   catch(err){
     console.log("DB Find user FAILED...");
