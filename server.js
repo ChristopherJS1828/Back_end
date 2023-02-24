@@ -45,6 +45,7 @@ app.post('/FeelingsDesc', function requestHandler(req, res) {
   res.send(req.body);
 });
 
+//change name
 app.get('/MoodHistory', async function requestHandler(req, res) {
   const userId = req.query.UserId;
   // console.log(userId);
@@ -52,12 +53,12 @@ app.get('/MoodHistory', async function requestHandler(req, res) {
   res.send(diaries);
 });
 
-// app.get('/MoodHistory', async function requestHandler(req, res) {
-//   const userId = req.query.UserId;
-//   const moods = await getMoodEntries(userId);
-//   console.log(moods);
-//   res.send(moods);
-// });
+app.get('/MoodEntries', async function requestHandler(req, res) {
+  const userId = req.query.UserId;
+  const moods = await getMoodEntries(userId);
+  console.log(moods);
+  res.send(moods);
+});
 
 //
 app.post('/UserQuestions', function requestHandler(req, res) {
