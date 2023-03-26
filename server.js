@@ -19,40 +19,33 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // enabling CORS for all requests
 app.use(cors());
 
-
+//Connection to the MongoDB server
 const uri = "mongodb+srv://Admin:12345@cluster0.sne1o.mongodb.net/?retryWrites=true&w=majority";
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 let inputData = {}
-// defining an endpoint to return all ads
-// app.get('/', (req, res) => {
 
-// collection.insertOne(inputData);
-
-//function to add new data into new collections
-// addToDatabase()
-//   res.send("Data Added");
-// });
-
+//function that adds the Users credentials to the Database
 app.post('/SignUp', function requestHandler(req, res) {
   console.log(JSON.stringify(req.body));
   addToDatabase("Users",req.body)
   res.send(req.body);
 });
 
+//function that adds the users diary entry to the database
 app.post('/FeelingsDesc', function requestHandler(req, res) {
   console.log(JSON.stringify(req.body));
   addToDatabase("DiaryEntry",req.body)
   res.send(req.body);
 });
 
-//change name
+//function which retrieves diary entries from database
 app.get('/MoodHistory', async function requestHandler(req, res) {
   const userId = req.query.UserId;
-  // console.log(userId);
   const diaries = await getDiaryEntries(userId);
   res.send(diaries);
 });
 
+//function which retrieves mood entries from database
 app.get('/MoodEntries', async function requestHandler(req, res) {
   const userId = req.query.UserId;
   const moods = await getMoodEntries(userId);
@@ -60,7 +53,7 @@ app.get('/MoodEntries', async function requestHandler(req, res) {
   res.send(moods);
 });
 
-//
+//function which submits the mood survey answers to the database
 app.post('/UserQuestions', function requestHandler(req, res) {
   console.log(JSON.stringify(req.body));
   addToDatabase("MoodAns",req.body)
@@ -167,6 +160,7 @@ app.listen(port, () => {
   console.log('listening on port 8000');
 });
 
+//function used to add all informatoion to the database
 function addToDatabase(moodCollection,inputData){
     try{
       const collection = client.db("Mood_App").collection(moodCollection);
@@ -179,6 +173,7 @@ function addToDatabase(moodCollection,inputData){
     }
 }
 
+//function which retrieves an exisiting user from the database matching by email
 function getUser(email){
   try{
     const collection = client.db("Mood_App").collection("Users");
@@ -190,16 +185,12 @@ function getUser(email){
   }
 }
 
+//function which retrieves all diary entries recorded by a user matching by userId
 function getDiaryEntries(userid){
   try{
     console.log(`Getting diary entry for user with user id: ${userid}`);
     const collection = client.db("Mood_App").collection("DiaryEntry");
     return collection.find({UserId: userid}).toArray();
-    // console.log(`Get diaries returning ${diaryItems.length} items`);
-    // diaryItems.forEach((item) => {
-    //   console.log(`${item.DiaryEntry}`);
-    // });
-    // return diaryItems;
   }
   catch(err){
     console.log("DB Find user FAILED...");
@@ -208,6 +199,7 @@ function getDiaryEntries(userid){
  
 }
 
+//function which retrieves all mood entries recorded by a user matching by userId
 function getMoodEntries(userid){
   try{
     console.log(`Getting mood entry for user with user id: ${userid}`);
