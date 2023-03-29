@@ -27,14 +27,14 @@ let inputData = {}
 //function that adds the Users credentials to the Database
 app.post('/SignUp', function requestHandler(req, res) {
   console.log(JSON.stringify(req.body));
-  addToDatabase("Users",req.body)
+  addToDatabase("Users", req.body)
   res.send(req.body);
 });
 
 //function that adds the users diary entry to the database
 app.post('/FeelingsDesc', function requestHandler(req, res) {
   console.log(JSON.stringify(req.body));
-  addToDatabase("DiaryEntry",req.body)
+  addToDatabase("DiaryEntry", req.body)
   res.send(req.body);
 });
 
@@ -56,7 +56,7 @@ app.get('/MoodEntries', async function requestHandler(req, res) {
 //function which submits the mood survey answers to the database
 app.post('/UserQuestions', function requestHandler(req, res) {
   console.log(JSON.stringify(req.body));
-  addToDatabase("MoodAns",req.body)
+  addToDatabase("MoodAns", req.body)
   res.send(req.body);
 });
 
@@ -66,36 +66,36 @@ app.post('/Login', async function (req, res) {
   const pwd = req.body.password;
 
   // return 400 status if username/password is not exist
-if (!email || !pwd) {
-  return res.status(400).json({
-    error: true,
-    message: "Username or Password is required."
-  });
-}
-const existingUser = await getUser(email);
+  if (!email || !pwd) {
+    return res.status(400).json({
+      error: true,
+      message: "Username or Password is required."
+    });
+  }
+  const existingUser = await getUser(email);
 
-// return 401 status if the credential is not match.
-if (!existingUser) {
-  return res.status(401).json({
-    error: true,
-    message: "No user found"
-  });
-}
+  // return 401 status if the credential is not match.
+  if (!existingUser) {
+    return res.status(401).json({
+      error: true,
+      message: "No user found"
+    });
+  }
 
-// return 401 status if the credential is not match.
-if (email !== existingUser.Email || pwd !== existingUser.Password) {
-  return res.status(401).json({
-    error: true,
-    message: "Email or Password is wrong."
-  });
-}
+  // return 401 status if the credential is not match.
+  if (email !== existingUser.Email || pwd !== existingUser.Password) {
+    return res.status(401).json({
+      error: true,
+      message: "Email or Password is wrong."
+    });
+  }
 
-// generate token
-const token = utils.generateToken(existingUser);
-// get basic user details
-const userObj = utils.getCleanUser(existingUser);
-// return the token along with user details
-return res.json({ existingUser: userObj, token });
+  // generate token
+  const token = utils.generateToken(existingUser);
+  // get basic user details
+  const userObj = utils.getCleanUser(existingUser);
+  // return the token along with user details
+  return res.json({ existingUser: userObj, token });
 
 });
 
@@ -115,7 +115,7 @@ app.get('/verifyToken', function (req, res) {
       error: true,
       message: "Invalid token."
     });
- 
+
     // return 401 status if the userId does not match.
     if (user.email !== inputData.email) {
       return res.status(401).json({
@@ -135,7 +135,7 @@ app.use(function (req, res, next) {
   // check header or url parameters or post parameters for token
   var token = req.headers['authorization'];
   if (!token) return next(); //if no token, continue
- 
+
   token = token.replace('Bearer ', '');
   jwt.verify(token, process.env.JWT_SECRET, function (err, user) {
     if (err) {
@@ -149,7 +149,7 @@ app.use(function (req, res, next) {
     }
   });
 });
- 
+
 // request handlers
 app.get('/', (req, res) => {
   res.send('Welcome to the Node.js Tutorial! - ');
@@ -161,55 +161,53 @@ app.listen(port, () => {
 });
 
 //function used to add all informatoion to the database
-function addToDatabase(moodCollection,inputData){
-    try{
-      const collection = client.db("Mood_App").collection(moodCollection);
-      collection.insertOne(inputData);
-      console.log("Data Succesfully Added to Collection - \"" + collection + "\"");
-    }
-    catch(err){
-      console.log("DB AddUserData Operation FAILED...");
-      console.log(err);
-    }
+function addToDatabase(moodCollection, inputData) {
+  try {
+    const collection = client.db("Mood_App").collection(moodCollection);
+    collection.insertOne(inputData);
+    console.log("Data Succesfully Added to Collection - \"" + collection + "\"");
+  }
+  catch (err) {
+    console.log("DB AddUserData Operation FAILED...");
+    console.log(err);
+  }
 }
 
 //function which retrieves an exisiting user from the database matching by email
-function getUser(email){
-  try{
+function getUser(email) {
+  try {
     const collection = client.db("Mood_App").collection("Users");
-    return collection.findOne({Email: email});
+    return collection.findOne({ Email: email });
   }
-  catch(err){
+  catch (err) {
     console.log("DB Find user FAILED...");
     console.log(err);
   }
 }
 
 //function which retrieves all diary entries recorded by a user matching by userId
-function getDiaryEntries(userid){
-  try{
+function getDiaryEntries(userid) {
+  try {
     console.log(`Getting diary entry for user with user id: ${userid}`);
     const collection = client.db("Mood_App").collection("DiaryEntry");
-    return collection.find({UserId: userid}).toArray();
+    return collection.find({ UserId: userid }).toArray();
   }
-  catch(err){
+  catch (err) {
     console.log("DB Find user FAILED...");
     console.log(err);
   }
- 
+
 }
 
 //function which retrieves all mood entries recorded by a user matching by userId
-function getMoodEntries(userid){
-  try{
+function getMoodEntries(userid) {
+  try {
     console.log(`Getting mood entry for user with user id: ${userid}`);
     const collection = client.db("Mood_App").collection("MoodAns");
-    return collection.find({UserId: userid}).toArray();
+    return collection.find({ UserId: userid }).toArray();
   }
-  catch(err){
+  catch (err) {
     console.log("DB Find user FAILED...");
     console.log(err);
   }
 }
-
-
